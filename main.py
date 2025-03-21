@@ -18,7 +18,7 @@ import pickle
 
 # Initialize logger
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='\n\n\n%(asctime)s - %(name)s - %(levelname)s - %(message)s ')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s ')
 
 app = FastAPI()
 
@@ -43,6 +43,8 @@ metrics_data = {
     }
 }
 
+
+
 @app.post("/run-load-test")
 async def run_load_test(
         user: Union[int, None] = Query(default=100), 
@@ -53,44 +55,51 @@ async def run_load_test(
         duration: Union[int, None] = Query(default=60),
         ):
     try:
-        def testing2(url_test):
-            testingurl = requests.get(url_test)
-            print (testingurl.status_code)
+        # def testing2(url_test):
 
-        # MAIN PROGRAM
-    # try:
+
+        # MAIN PROGRAM  
         # Set environment variables for Locust
         os.environ["LOCUST_USERS"] = str(user)
         os.environ["LOCUST_SPAWN_RATE"] = str(spawnrate)
         os.environ["LOCUST_DURATION"] = str(duration)
         os.environ["LOCUST_HOST"] = str(url)
 
+        try:
+            logging.info(f"Testing url = {url}")
+            testingurl = requests.get(f"{url}/v1/models", headers={"Authorization": "Bearer sk-G1_wkZ37sEmY4eqnGdcNig"}, timeout=3)
+            logger.info(testingurl.status_code)
+            if testingurl.status_code != 200:
+                raise HTTPException(status_code=404, detail=str(e))
+        except Exception as e:
+            logger.error(f"Error in run_load_test: 1 {e}")
+            raise HTTPException(status_code=404, detail=str(e))
+
         if model==None:
-            print("MODEL NONE")
+            logger.info("MODEL NONE")
             model_name = f"{url}/v1/models"
             models_response = requests.get(model_name, headers={"Authorization": "Bearer sk-G1_wkZ37sEmY4eqnGdcNig"})
             if models_response.status_code == 200:
                 model_data = models_response.json()
-                print(model_data)
+                logger.info(model_data)
                 model_data = model_data.get("data", [{}])[0].get("id", "meta-llama/Llama-3.2-90B-Vision-Instruct")
             else:
-                print(f"Failed to fetch models, status: {models_response.status_code}")
+                logger.info(f"Failed to fetch models, status: {models_response.status_code}")
                 model_data = "meta-llama/Llama-3.2-90B-Vision-Instruct"
         else:
             model_data = str(model)
 
-        print(f"Using model:", model_data)
+
+        logger.info(f"Using model:", model_data)
         os.environ["LOCUST_MODEL"] = model_data
         
         if tokenizer==None:
-            print("TOKEN NONE")
+            logger.info("TOKEN NONE")
             token_data = model_data
         else: 
             token_data = str(tokenizer)
 
-        print(f"Using token:", token_data)
-        print(f"end token")
-        
+        logger.info(f"Using token:", token_data)
         os.environ["LOCUST_TOKENIZER"] = token_data
 
         logger.info("Environment variables set")
@@ -105,13 +114,8 @@ async def run_load_test(
             "--host", url
         ]
 
-        try:
-            print(f"Testing url = {url}")
-            testing2(url)
-        except Exception as e:
-            return HTTPException(status_code=400, detail=str(e))
 
-        logger.info("tester4")
+        logger.info("start locust")
         # Start the Locust process and capture output
         process = subprocess.Popen(
             locust_command,
@@ -122,7 +126,6 @@ async def run_load_test(
 
         # Wait for the process to complete
         stdout, stderr = process.communicate()
-        # print("Locust process output:", stdout)
         print("Locust process error:", stderr)
 
         metrics={}
@@ -131,25 +134,6 @@ async def run_load_test(
         logger.info("Metrics:", metrics)
         print(f"Metrics: {metrics}")
 
-        # # Check if the process completed successfully
-        # if process.returncode != 0:
-        #     # logger.info("Error: Test completed with some failure", process.returncode)
-        #     logger.info("tester4")
-        #     return {
-        #             "ps": process.returncode,
-        #             "status": "Test completed 1", 
-        #             "metrics": metrics["metrics"] if isinstance(metrics, dict) and "metrics" in metrics else metrics,
-        #             "configuration": {
-        #                     "user": user,
-        #                     "spawnrate": spawnrate,
-        #                     "model": model_data,
-        #                     "tokenizer": token_data,
-        #                     "url": url,
-        #                     "duration": duration
-        #                 },
-        #             # "error": stderr
-        #             }
-        # # return HTTPException(status_code=401, detail=str(e))
         return {
             # "errror": e,
             # "ps": process.returncode,
@@ -164,11 +148,10 @@ async def run_load_test(
                 "duration": duration
             }
         }
-    # except Exception as e:
             
     except Exception as e:
-        logger.error(f"Error in run_load_test: 4 {e}")
-        return HTTPException(status_code=402, detail=str(e))
+        logger.error(f"Error in run_load_test: 2 {e}")
+        raise HTTPException(status_code=404, detail=str(e))
         
 
 if __name__ == "__main__":
