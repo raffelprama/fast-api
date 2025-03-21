@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-fastapi
+  labels:
+    app: my-fastapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-fastapi
+  template:
+    metadata:
+      labels:
+        app: my-fastapi
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000  # Example non-root user ID
+      containers:
+      - name: my-fastapi
+        image: ghcr.io/prm008/my-fastapi:0.0.1
+        ports:
+        - containerPort: 8000  # Port the application listens on
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000  # Example non-root user ID
+      imagePullSecrets:
+      - name: regcred  # Reference the secret created
