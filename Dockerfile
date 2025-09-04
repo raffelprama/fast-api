@@ -41,6 +41,8 @@ ENV LOCUST_SPAWN_RATE=100
 ENV LOCUST_DURATION=60
 ENV LOCUST_MODEL=deepseek-ai/DeepSeek-R1-70B
 ENV LOCUST_TOKENIZER=deepseek-ai/DeepSeek-R1
+ENV LOCUST_DATASET=mteb/banking77
+
 
 # Run FastAPI using Uvicorn
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]

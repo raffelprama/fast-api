@@ -1,0 +1,77 @@
+fka/awesome-chatgpt-prompts
+
+{
+  "status": "Test completed",
+  "metrics": {
+    "time_to_first_token": {
+      "average": 345.11,
+      "maximum": 1134.75,
+      "minimum": 127.56,
+      "median": 211.63
+    },
+    "end_to_end_latency": {
+      "average": 13121.34,
+      "maximum": 14078.57,
+      "minimum": 3176.3,
+      "median": 13744.33
+    },
+    "inter_token_latency": {
+      "average": 103.48,
+      "maximum": 107.7,
+      "minimum": 96.46,
+      "median": 104.57
+    },
+    "token_speed": {
+      "average": 9.46,
+      "maximum": 9.85,
+      "minimum": 8.94,
+      "median": 9.45
+    },
+
+
+mteb/banking77
+{
+  "status": "Test completed",
+  "metrics": {
+    "time_to_first_token": {
+      "average": 353.96,
+      "maximum": 1157.8,
+      "minimum": 124.11,
+      "median": 206.74
+    },
+    "end_to_end_latency": {
+      "average": 13132.99,
+      "maximum": 14282.32,
+      "minimum": 4318.71,
+      "median": 13596.63
+    },
+    "inter_token_latency": {
+      "average": 102.88,
+      "maximum": 109.21,
+      "minimum": 94.25,
+      "median": 101.61
+    },
+    "token_speed": {
+      "average": 9.5,
+      "maximum": 9.96,
+      "minimum": 7.87,
+      "median": 9.48
+    },
+    "throughput": {
+      "input_tokens_per_second": 309.27,
+      "output_tokens_per_second": 691.54
+    }
+  },
+  "configuration": {
+    "user": 100,
+    "spawnrate": 100,
+    "model": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+    "tokenizer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+    "url": "http://10.1.60.78",
+    "duration": 60
+  }
+}
+
+
+
+maveriq/bigbenchhard

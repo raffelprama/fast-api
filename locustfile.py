@@ -16,15 +16,19 @@ host_url = str(os.getenv("LOCUST_HOST", "https://dekallm.cloudeka.ai"))   #edite
 locust_users = int(os.getenv("LOCUST_USERS", 100))
 locust_spawn_rate = int(os.getenv("LOCUST_SPAWN_RATE", 100))
 locust_duration = int(os.getenv("LOCUST_DURATION", 60))
+dataset = str(os.getenv("LOCUST_DATASET", "mteb/banking77"))
+api_token = str(os.getenv("API_TOKEN"))
+hf_token = str(os.getenv("HF_TOKEN"))
 
 # Initialize tokenizer with user-specified tokenizer
+print(hf_token)
 tokenizer = AutoTokenizer.from_pretrained(
     tokenizer_name,
-    token="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"
+    token=hf_token
 )
 
 # Load Banking77 dataset prompts
-dataset = load_dataset("mteb/banking77", split="test")
+dataset = load_dataset(dataset, split="test")
 prompts = dataset["text"]
 
 # Global variables for metrics collection
@@ -104,22 +108,12 @@ class nemotron(HttpUser):
             input_length = len(tokenizer(input_text)['input_ids'])
             total_input_tokens += input_length
 
-            # Send request
-            # print("------------data-----------------")
-            # print(f"model used: {model_name}")
-            # print(f"tokenizer used: {tokenizer_name}")
-            # print(f"url used: {host_url}")
-            # print(f"duration used: {locust_duration}")
-            # print(f"user used: {locust_users}")
-            # print(f"spawnrate used: {locust_spawn_rate}")
-            # print("--------------------------------")
-
             response = self.client.post(
                 url="/v1/chat/completions",
                 headers={
                     'Content-type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': 'Bearer sk-G1_wkZ37sEmY4eqnGdcNig'
+                    'Authorization': f"Bearer {api_token}"
                 },
 
                 data=json.dumps({

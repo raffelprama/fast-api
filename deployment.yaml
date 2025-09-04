@@ -1,25 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-fastapi
+  name: bechmark-beta-api
+  namespace: benchmark
   labels:
-    app: my-fastapi
+    app: bechmark-beta-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: my-fastapi
+      app: bechmark-beta-api
   template:
     metadata:
       labels:
-        app: my-fastapi
+        app: bechmark-beta-api
     spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000  # Example non-root user ID
       containers:
-      - name: my-fastapi
-        image: ghcr.io/prm008/my-fastapi:0.0.1
+      - name: bechmark-beta-api
+        image: ghcr.io/raffelprama/my-fastapi:0.1.7
         ports:
         - containerPort: 8000  # Port the application listens on
         resources:
@@ -29,6 +30,9 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+        envFrom:
+        - secretRef:
+            name: bechmark-beta-api-env 
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true

@@ -18,7 +18,7 @@ import pickle
 
 # Initialize logger
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s ')
+logging.basicConfig(level=logging.INFO, format='\n\n\n%(asctime)s - %(name)s - %(levelname)s - %(message)s ')
 
 app = FastAPI()
 
@@ -30,6 +30,11 @@ duration_global = 60
 status_url=""
 global model_data
 global global_data
+
+api_token = os.getenv("API_TOKEN")
+hf_token = os.getenv("HF_TOKEN")
+
+print(hf_token)
 
 # Global variables for metrics storage
 metrics_data = {
@@ -43,8 +48,6 @@ metrics_data = {
     }
 }
 
-
-
 @app.post("/run-load-test")
 async def run_load_test(
         user: Union[int, None] = Query(default=100), 
@@ -53,53 +56,53 @@ async def run_load_test(
         tokenizer: Union[str, None] = Query(None), #default="deepseek-ai/DeepSeek-R1"
         url: Union[str, None] = Query(default="https://dekallm.cloudeka.ai"),
         duration: Union[int, None] = Query(default=60),
+        dataset: Union[str, None] = Query(default="mteb/banking77"),
         ):
     try:
-        # def testing2(url_test):
+        def testing1(url_test):
+            testingurl = requests.get(url_test)
+            print (testingurl.status_code)
 
+        def testing2(dataset):
+            testingurl = requests.get(f"https://huggingface.co/datasets/{dataset}")
+            print (testingurl.status_code)
+            if testingurl.status_code != 200:
+                raise ConnectionError
 
-        # MAIN PROGRAM  
         # Set environment variables for Locust
         os.environ["LOCUST_USERS"] = str(user)
         os.environ["LOCUST_SPAWN_RATE"] = str(spawnrate)
         os.environ["LOCUST_DURATION"] = str(duration)
         os.environ["LOCUST_HOST"] = str(url)
-
-        try:
-            logging.info(f"Testing url = {url}")
-            testingurl = requests.get(f"{url}/v1/models", headers={"Authorization": "Bearer sk-G1_wkZ37sEmY4eqnGdcNig"}, timeout=3)
-            logger.info(testingurl.status_code)
-            if testingurl.status_code != 200:
-                raise HTTPException(status_code=404, detail=str(e))
-        except Exception as e:
-            logger.error(f"Error in run_load_test: 1 {e}")
-            raise HTTPException(status_code=404, detail=str(e))
+        os.environ["LOCUST_DATASET"] = str(dataset)
+        os.environ["API_TOKEN"] = str(api_token)
 
         if model==None:
-            logger.info("MODEL NONE")
+            print("MODEL NONE")
             model_name = f"{url}/v1/models"
-            models_response = requests.get(model_name, headers={"Authorization": "Bearer sk-G1_wkZ37sEmY4eqnGdcNig"})
+            models_response = requests.get(model_name, headers={"Authorization": f"Bearer {api_token}"})
             if models_response.status_code == 200:
                 model_data = models_response.json()
-                logger.info(model_data)
+                print(model_data)
                 model_data = model_data.get("data", [{}])[0].get("id", "meta-llama/Llama-3.2-90B-Vision-Instruct")
             else:
-                logger.info(f"Failed to fetch models, status: {models_response.status_code}")
+                print(f"Failed to fetch models, status: {models_response.status_code}")
                 model_data = "meta-llama/Llama-3.2-90B-Vision-Instruct"
         else:
             model_data = str(model)
 
-
-        logger.info(f"Using model:", model_data)
+        print(f"Using model:", model_data)
         os.environ["LOCUST_MODEL"] = model_data
         
         if tokenizer==None:
-            logger.info("TOKEN NONE")
+            print("TOKEN NONE")
             token_data = model_data
         else: 
             token_data = str(tokenizer)
 
-        logger.info(f"Using token:", token_data)
+        print(f"Using token:", token_data)
+        print(f"end token")
+        
         os.environ["LOCUST_TOKENIZER"] = token_data
 
         logger.info("Environment variables set")
@@ -114,9 +117,20 @@ async def run_load_test(
             "--host", url
         ]
 
+        try:
+            print(f"Testing url = {url}")
+            testing1(url)
 
-        logger.info("start locust")
-        # Start the Locust process and capture output
+        except Exception as e:
+            return HTTPException(status_code=400, detail=str(e))
+
+        try:
+            print(f"Testing data = {dataset}")
+            testing2(dataset)
+        except Exception as e:
+            raise HTTPException(status_code=402, detail=f"Dataset not found or unauthorized: {str(e)}")
+
+        logger.info("tester4")
         process = subprocess.Popen(
             locust_command,
             stdout=subprocess.PIPE,
@@ -124,12 +138,10 @@ async def run_load_test(
             universal_newlines=True
         )
 
-        # Wait for the process to complete
         stdout, stderr = process.communicate()
         print("Locust process error:", stderr)
 
         metrics={}
-        # Now get the metrics
         metrics = get_current_metrics()
         logger.info("Metrics:", metrics)
         print(f"Metrics: {metrics}")
@@ -144,14 +156,16 @@ async def run_load_test(
                 "spawnrate": spawnrate,
                 "model": model_data,
                 "tokenizer": token_data,
+                "data":dataset,
                 "url": url,
                 "duration": duration
             }
         }
+    # except Exception as e:
             
     except Exception as e:
-        logger.error(f"Error in run_load_test: 2 {e}")
-        raise HTTPException(status_code=404, detail=str(e))
+        logger.error(f"Error in run_load_test: 4 {e}")
+        return HTTPException(status_code=402, detail=str(e))
         
 
 if __name__ == "__main__":
